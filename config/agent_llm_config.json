@@ -24,10 +24,10 @@
             "top_p": 0.9,
             "max_completion_tokens": 12000
         },
-        "current": {
+        "legacy": {
             "id": "doubao-seed-1-6-251015",
             "name": "豆包 1.6",
-            "description": "当前使用的模型，平衡性能",
+            "description": "豆包1.6版本，成熟稳定",
             "temperature": 0.7,
             "top_p": 0.9,
             "max_completion_tokens": 10000
