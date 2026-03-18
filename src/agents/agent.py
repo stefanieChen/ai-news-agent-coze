@@ -38,17 +38,41 @@ def build_agent(ctx=None):
     api_key = os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
     base_url = os.getenv("COZE_INTEGRATION_MODEL_BASE_URL")
 
+    # 获取激活的模型（优先使用环境变量，否则使用配置文件中的active_model）
+    active_model_key = os.getenv("COZE_ACTIVE_MODEL", cfg.get("active_model", "balanced"))
+
+    # 从models对象中获取对应的模型配置
+    models = cfg.get("models", {})
+    if active_model_key not in models:
+        print(f"警告: 未找到模型 '{active_model_key}'，使用默认模型 'balanced'")
+        active_model_key = "balanced"
+
+    model_config = models[active_model_key]
+
+    # 合并全局配置和模型特定配置
+    global_config = cfg.get("config", {})
+    final_config = {
+        "model": model_config.get("id"),
+        "temperature": model_config.get("temperature", global_config.get("temperature", 0.7)),
+        "top_p": model_config.get("top_p", global_config.get("top_p", 0.9)),
+        "max_completion_tokens": model_config.get("max_completion_tokens", global_config.get("max_completion_tokens", 10000)),
+        "timeout": global_config.get("timeout", 600),
+        "thinking": model_config.get("thinking", global_config.get("thinking", "disabled"))
+    }
+
+    print(f"使用模型: {model_config.get('name')} ({model_config.get('id')})")
+
     # 初始化LLM
     llm = ChatOpenAI(
-        model=cfg['config'].get("model"),
+        model=final_config["model"],
         api_key=api_key,
         base_url=base_url,
-        temperature=cfg['config'].get('temperature', 0.7),
+        temperature=final_config["temperature"],
         streaming=True,
-        timeout=cfg['config'].get('timeout', 600),
+        timeout=final_config["timeout"],
         extra_body={
             "thinking": {
-                "type": cfg['config'].get('thinking', 'disabled')
+                "type": final_config["thinking"]
             }
         },
         default_headers=default_headers(ctx) if ctx else {}
