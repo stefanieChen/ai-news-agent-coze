@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.tools.news_search_tool import search_ai_news
 from src.tools.email_tool import send_news_email
-from src.tools.wechat_tool import send_wechat_message
 from src.tools.feishu_tool import send_feishu_message
 from src.agents.agent import build_agent
 from coze_coding_utils.runtime_ctx.context import new_context
@@ -40,15 +39,6 @@ def send_to_email(content, recipient_email):
     print(f"[{datetime.now()}] 邮件发送结果: {result}")
     return result
 
-def send_to_wechat(content):
-    """发送到企业微信"""
-    print(f"[{datetime.now()}] 推送到企业微信...")
-    
-    result = send_wechat_message(content)
-    
-    print(f"[{datetime.now()}] 企业微信推送结果: {result}")
-    return result
-
 def send_to_feishu(content):
     """发送到飞书"""
     print(f"[{datetime.now()}] 推送到飞书...")
@@ -66,7 +56,7 @@ def main():
     print("=" * 60)
     
     # 读取配置
-    config_path = os.path.join(os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects"), "config/schedule_config.json")
+    config_path = os.path.join(os.path.dirname(__file__), "schedule_config.json")
     
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
@@ -82,10 +72,6 @@ def main():
         recipient = platforms["email"].get("recipient")
         if recipient:
             send_to_email(news_content, recipient)
-    
-    # 发送到企业微信
-    if platforms.get("wechat", {}).get("enabled"):
-        send_to_wechat(news_content)
     
     # 发送到飞书
     if platforms.get("feishu", {}).get("enabled"):

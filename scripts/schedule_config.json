@@ -8,10 +8,6 @@
             "enabled": true,
             "recipient": "your-email@example.com"
         },
-        "wechat": {
-            "enabled": false,
-            "webhook_key": ""
-        },
         "feishu": {
             "enabled": false,
             "webhook_url": ""

@@ -8,45 +8,7 @@
 
 ## ✅ 支持的平台
 
-### 1. 企业微信群机器人 ✅
-
-#### 功能
-- 发送文本、Markdown、图文消息
-- 支持文件、图片、语音
-- 可以@群成员
-
-#### 集成步骤
-
-**步骤1：创建企业微信机器人**
-1. 在企业微信群中点击"添加机器人"
-2. 自定义机器人名称（如：AI新闻助手）
-3. 复制Webhook地址
-
-**步骤2：配置环境变量**
-在Coze平台配置企业微信机器人集成：
-```
-integration-wechat-bot
-```
-填入Webhook地址
-
-**步骤3：添加工具到Agent**
-修改 `src/agents/agent.py`：
-```python
-from tools.wechat_tool import send_wechat_message
-
-# 在create_agent中添加工具
-tools=[search_ai_news, send_news_email, send_wechat_message]
-```
-
-**步骤4：使用示例**
-```
-用户：搜索AI新闻并发送到企业微信群
-Agent：正在搜索并推送到企业微信...
-```
-
----
-
-### 2. 飞书群机器人 ✅
+### 1. 飞书群机器人 ✅
 
 #### 功能
 - 发送文本、富文本消息
@@ -84,22 +46,7 @@ Agent：正在搜索并推送到飞书...
 
 ---
 
-### 3. 微信公众号 ❌
-
-**状态**：需要额外的开发工作
-
-**原因**：
-- 公众号需要处理用户消息接收
-- 需要配置服务器URL
-- 需要处理签名验证
-
-**替代方案**：
-- 使用企业微信机器人（推荐）
-- 或者单独开发公众号对接服务
-
----
-
-### 4. 豆包 ⚠️
+### 2. 豆包 ⚠️
 
 **说明**：豆包是一个**LLM模型**，不是平台
 
@@ -133,13 +80,12 @@ export COZE_ACTIVE_MODEL=balanced
 
 ### 方案1：多平台集成（推荐）
 
-同时支持邮件、企业微信、飞书：
+同时支持邮件和飞书：
 
 ```python
 # src/agents/agent.py
 from tools.news_search_tool import search_ai_news
 from tools.email_tool import send_news_email
-from tools.wechat_tool import send_wechat_message
 from tools.feishu_tool import send_feishu_message
 
 create_agent(
@@ -147,7 +93,6 @@ create_agent(
     tools=[
         search_ai_news,
         send_news_email,
-        send_wechat_message,
         send_feishu_message
     ]
 )
@@ -155,8 +100,8 @@ create_agent(
 
 **使用示例**：
 ```
-用户：搜索AI新闻并发送到企业微信和飞书
-Agent：正在搜索并推送到企业微信和飞书群...
+用户：搜索AI新闻并发送到飞书
+Agent：正在搜索并推送到飞书群...
 ```
 
 ---
@@ -168,7 +113,6 @@ Agent：正在搜索并推送到企业微信和飞书群...
 | 平台 | 优势 | 适用场景 |
 |------|------|----------|
 | 邮件 | 正式、可存档 | 工作汇报、重要通知 |
-| 企业微信 | 即时、互动 | 团队协作、日常推送 |
 | 飞书 | 功能丰富、卡片式 | 项目管理、信息展示 |
 
 ---
@@ -182,7 +126,6 @@ Agent：正在搜索并推送到企业微信和飞书群...
 
 from tools.news_search_tool import search_ai_news
 from tools.email_tool import send_news_email
-from tools.wechat_tool import send_wechat_message
 from tools.feishu_tool import send_feishu_message
 
 def build_agent(ctx=None):
@@ -193,7 +136,6 @@ def build_agent(ctx=None):
         tools=[
             search_ai_news,        # 搜索新闻
             send_news_email,       # 发送邮件
-            send_wechat_message,   # 发送到企业微信
             send_feishu_message    # 发送到飞书
         ],
         checkpointer=get_memory_saver(),
@@ -211,13 +153,12 @@ def build_agent(ctx=None):
 2. 筛选和评估：根据新闻的实用价值、重要性、时效性等维度评估新闻
 3. 总结内容：用简洁清晰的语言总结每条新闻的核心内容
 4. 发送邮件：使用send_news_email工具将汇总的新闻发送到指定邮箱
-5. 推送到企业微信：使用send_wechat_message工具推送到企业微信群
-6. 推送到飞书：使用send_feishu_message工具推送到飞书群
+5. 推送到飞书：使用send_feishu_message工具推送到飞书群
 
 # 过程
 ...
 5. **推送消息**：
-   - 用户可以指定推送到邮箱、企业微信或飞书
+   - 用户可以指定推送到邮箱或飞书
    - 可以同时推送到多个平台
    - 如果未指定，默认使用邮件发送
 ```
@@ -231,7 +172,6 @@ def build_agent(ctx=None):
 | 配置项 | 平台 | 状态 |
 |--------|------|------|
 | `integration-email-imap-smtp` | 邮件 | ✅ 已配置 |
-| `integration-wechat-bot` | 企业微信 | ⚠️ 需配置 |
 | `integration-feishu-message` | 飞书 | ⚠️ 需配置 |
 
 ### 配置位置
@@ -247,43 +187,29 @@ def build_agent(ctx=None):
 搜索AI新闻并发送到 myemail@example.com
 ```
 
-### 示例2：推送到企业微信
-```
-搜索AI新闻并发送到企业微信群
-```
-
-### 示例3：推送到飞书
+### 示例2：推送到飞书
 ```
 搜索AI新闻并发送到飞书群
 ```
 
-### 示例4：多平台推送
+### 示例3：多平台推送
 ```
-搜索AI新闻并发送到企业微信和飞书
-```
-
-### 示例5：全部推送
-```
-搜索AI新闻并发送到企业微信、飞书和邮箱 myemail@example.com
+搜索AI新闻并发送到飞书和邮箱 myemail@example.com
 ```
 
 ---
 
 ## ⚠️ 注意事项
 
-1. **企业微信机器人**
-   - 每分钟最多发送20条消息
-   - 消息长度有限制（文本2048字节，Markdown 4096字节）
-
-2. **飞书机器人**
+1. **飞书机器人**
    - 需要先在飞书群中创建机器人
    - Webhook地址需要保密
 
-3. **邮件**
+2. **邮件**
    - 需要配置SMTP服务器
    - 需要邮箱授权码（非登录密码）
 
-4. **豆包模型**
+3. **豆包模型**
    - 已集成，无需额外配置
    - 可以选择不同版本
 
@@ -294,9 +220,7 @@ def build_agent(ctx=None):
 | 平台 | 支持状态 | 配置难度 | 推荐指数 |
 |------|----------|----------|----------|
 | 邮件 | ✅ 已支持 | ⭐ 简单 | ⭐⭐⭐⭐⭐ |
-| 企业微信 | ✅ 可集成 | ⭐⭐ 中等 | ⭐⭐⭐⭐ |
 | 飞书 | ✅ 可集成 | ⭐⭐ 中等 | ⭐⭐⭐⭐ |
-| 微信公众号 | ⚠️ 需开发 | ⭐⭐⭐ 困难 | ⭐⭐ |
 | 豆包 | ✅ 已支持 | ⭐ 简单 | N/A（是模型） |
 
 **建议**：根据您的实际使用场景选择1-2个主要平台集成即可。

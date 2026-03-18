@@ -52,7 +52,6 @@
 - **开发难度**：⭐ 简单
 - **支持平台**：
   - ✅ 邮件
-  - ✅ 企业微信群（通过机器人Webhook）
   - ✅ 飞书群（通过机器人Webhook）
 
 ---
@@ -83,10 +82,6 @@
             "enabled": true,
             "recipient": "your-email@example.com"
         },
-        "wechat": {
-            "enabled": true,
-            "webhook_key": "your-webhook-key"
-        },
         "feishu": {
             "enabled": true,
             "webhook_url": "your-webhook-url"
@@ -95,19 +90,13 @@
 }
 ```
 
-#### 第2步：配置企业微信群机器人（可选）
-
-1. 在企业微信群中添加机器人
-2. 复制Webhook地址
-3. 将Webhook地址配置到Coze平台
-
-#### 第3步：配置飞书群机器人（可选）
+#### 第2步：配置飞书群机器人（可选）
 
 1. 在飞书群中添加机器人
 2. 复制Webhook地址
 3. 将Webhook地址配置到Coze平台
 
-#### 第4步：设置定时任务
+#### 第3步：设置定时任务
 
 **方式1：使用cron（Linux/Mac）**
 
@@ -181,87 +170,15 @@ systemctl start ai-news-push.timer
 
 ---
 
-## 📱 双向交互方案（高级）
-
-### 方案：企业微信应用
-
-如果您需要在企业微信中与Agent对话，需要：
-
-#### 第1步：创建企业微信应用
-
-1. 登录企业微信管理后台
-2. 创建应用
-3. 配置回调URL
-
-#### 第2步：开发消息处理服务
-
-需要创建一个服务来：
-1. 接收企业微信的消息
-2. 调用您的Agent API
-3. 返回Agent的回复
-
-**示例代码**：
-
-```python
-from flask import Flask, request
-import requests
-import xml.etree.ElementTree as ET
-
-app = Flask(__name__)
-
-@app.route('/wechat/callback', methods=['POST'])
-def wechat_callback():
-    # 解析企业微信消息
-    xml_data = request.data
-    root = ET.fromstring(xml_data)
-    
-    from_user = root.find('FromUserName').text
-    content = root.find('Content').text
-    
-    # 调用Agent API
-    response = requests.post(
-        'http://localhost:5000/run',
-        json={'text': content}
-    )
-    
-    result = response.json()
-    reply_content = result.get('messages', [{}])[0].get('content', '处理失败')
-    
-    # 返回回复消息
-    reply_xml = f"""
-    <xml>
-        <ToUserName>{from_user}</ToUserName>
-        <FromUserName>your-agent-id</FromUserName>
-        <CreateTime>{int(time.time())}</CreateTime>
-        <MsgType>text</MsgType>
-        <Content>{reply_content}</Content>
-    </xml>
-    """
-    
-    return reply_xml
-
-if __name__ == '__main__':
-    app.run(port=8000)
-```
-
-**开发难度**：⭐⭐⭐ 中等
-
----
-
 ## 🎯 最佳实践建议
 
 ### 场景1：每天接收AI资讯推送
 - **推荐方案**：定时推送
-- **推送平台**：邮件 + 企业微信群
+- **推送平台**：邮件 + 飞书群
 - **实现难度**：⭐ 简单
 - **时间投入**：30分钟
 
-### 场景2：在企业微信中与Agent对话
-- **推荐方案**：企业微信应用
-- **开发难度**：⭐⭐⭐ 中等
-- **时间投入**：1-2天
-
-### 场景3：在飞书中与Agent对话
+### 场景2：在飞书中与Agent对话
 - **推荐方案**：飞书机器人
 - **开发难度**：⭐⭐ 中等
 - **时间投入**：1天
@@ -312,11 +229,6 @@ crontab -e
 - ✅ **豆包是LLM模型，您的Agent已经在使用豆包模型**
 - ✅ **如果您想在豆包的对话界面使用，需要在Coze平台上操作**
 
-### 关于微信
-- ❌ **个人微信不支持机器人**
-- ✅ **企业微信群机器人支持单向推送**
-- ✅ **企业微信应用支持双向对话（需要开发）**
-
 ### 关于飞书
 - ✅ **飞书群机器人支持单向推送**
 - ✅ **飞书应用支持双向对话（需要开发）**
@@ -328,7 +240,6 @@ crontab -e
 | 需求 | 推荐方案 | 实现难度 | 时间投入 |
 |------|----------|----------|----------|
 | 每天接收AI资讯 | 定时推送 | ⭐ 简单 | 30分钟 |
-| 企业微信对话 | 企业微信应用 | ⭐⭐⭐ 中等 | 1-2天 |
 | 飞书对话 | 飞书机器人 | ⭐⭐ 中等 | 1天 |
 | 豆包app对话 | 不支持 | - | - |
 
