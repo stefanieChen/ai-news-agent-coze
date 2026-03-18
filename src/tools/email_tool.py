@@ -2,6 +2,7 @@ from langchain.tools import tool, ToolRuntime
 import json
 import smtplib
 import ssl
+import os
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr, formatdate, make_msgid
@@ -16,21 +17,40 @@ def get_email_config():
     email_credential = client.get_integration_credential("integration-email-imap-smtp")
     return json.loads(email_credential)
 
+def get_default_recipient():
+    """从配置文件获取默认收件人邮箱"""
+    try:
+        workspace_path = os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects")
+        config_path = os.path.join(workspace_path, "config/agent_llm_config.json")
+        
+        with open(config_path, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+            return cfg.get("default_recipient_email", "")
+    except:
+        return ""
+
 @tool
 @observe
-def send_news_email(subject: str, content: str, to_email: str, runtime: ToolRuntime = None) -> str:
+def send_news_email(subject: str, content: str, to_email: str = "", runtime: ToolRuntime = None) -> str:
     """
     发送AI新闻汇总邮件
     
     Args:
         subject: 邮件主题
         content: 邮件正文内容（HTML格式）
-        to_email: 收件人邮箱地址
+        to_email: 收件人邮箱地址（可选，如未提供将使用配置文件中的默认收件人）
     
     Returns:
         发送结果信息
     """
     try:
+        # 如果没有提供收件人，使用默认收件人
+        if not to_email or not to_email.strip():
+            to_email = get_default_recipient()
+            if not to_email:
+                return "发送失败：未提供收件人邮箱，且配置文件中未设置默认收件人"
+            print(f"使用配置文件中的默认收件人: {to_email}")
+        
         # 获取邮件配置
         config = get_email_config()
         
