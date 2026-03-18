@@ -1,0 +1,25 @@
+{
+    "schedule": {
+        "time": "09:00",
+        "timezone": "Asia/Shanghai"
+    },
+    "platforms": {
+        "email": {
+            "enabled": true,
+            "recipient": "your-email@example.com"
+        },
+        "wechat": {
+            "enabled": false,
+            "webhook_key": ""
+        },
+        "feishu": {
+            "enabled": false,
+            "webhook_url": ""
+        }
+    },
+    "news_search": {
+        "query": "AI人工智能 最新动态",
+        "count": 10,
+        "sites": ""
+    }
+}
