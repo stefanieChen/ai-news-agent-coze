@@ -62,6 +62,16 @@ def build_agent(ctx=None, force_sync_checkpointer: bool = False):
 
     print(f"使用模型: {model_config.get('name')} ({model_config.get('id')})")
 
+    # 获取当前日期（中国时区）
+    from datetime import datetime, timezone, timedelta
+    cst_tz = timezone(timedelta(hours=8))
+    current_date = datetime.now(cst_tz).strftime('%Y年%m月%d日')
+    current_datetime = datetime.now(cst_tz).strftime('%Y年%m月%d日 %H:%M:%S')
+
+    # 在System Prompt开头添加当前日期和时间
+    system_prompt = cfg.get("sp", "")
+    date_header = f"# 系统时间\n今天是：{current_date}\n当前时间：{current_datetime}\n\n---\n\n{system_prompt}"
+
     # 初始化LLM
     llm = ChatOpenAI(
         model=final_config["model"],
@@ -81,7 +91,7 @@ def build_agent(ctx=None, force_sync_checkpointer: bool = False):
     # 创建Agent，包含新闻搜索和邮件发送工具
     return create_agent(
         model=llm,
-        system_prompt=cfg.get("sp"),
+        system_prompt=date_header,
         tools=[search_ai_news, send_news_email],
         checkpointer=get_memory_saver(force_sync=force_sync_checkpointer),
         state_schema=AgentState,

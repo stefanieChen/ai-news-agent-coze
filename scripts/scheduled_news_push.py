@@ -78,10 +78,15 @@ def generate_news_summary():
 def send_to_email(content, recipient_email):
     """发送到邮箱"""
     print(f"[{datetime.now()}] 发送邮件到 {recipient_email}...")
-    
-    subject = f"[AI热点日报] {datetime.now().strftime('%Y-%m-%d')} - AI领域热点新闻汇总"
+
+    # 使用时区感知的日期计算
+    from datetime import timezone, timedelta
+    cst_tz = timezone(timedelta(hours=8))  # 中国标准时间 (UTC+8)
+    now_cst = datetime.now(cst_tz)
+    subject = f"[AI热点日报] {now_cst.strftime('%Y-%m-%d')} - AI领域热点新闻汇总"
+
     result = send_news_email(subject, content, recipient_email)
-    
+
     print(f"[{datetime.now()}] 邮件发送结果: {result}")
     return result
 

@@ -7,7 +7,7 @@
 import sys
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -15,6 +15,9 @@ from apscheduler.triggers.cron import CronTrigger
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from scheduled_news_push import main as push_news
+
+# 设置时区为中国标准时间 (UTC+8)
+CST_TZ = timezone(timedelta(hours=8))
 
 def load_schedule_config():
     """加载定时配置"""
@@ -70,13 +73,13 @@ def main():
     print("\n✅ 定时推送服务启动中...")
     print("   按 Ctrl+C 停止服务\n")
     
-    # 创建调度器
-    scheduler = BlockingScheduler(timezone=timezone)
-    
+    # 创建调度器（使用中国标准时间）
+    scheduler = BlockingScheduler(timezone=CST_TZ)
+
     # 添加定时任务（每天指定时间执行）
     scheduler.add_job(
         job,
-        CronTrigger(hour=hour, minute=minute),
+        CronTrigger(hour=hour, minute=minute, timezone=CST_TZ),
         id='ai_news_push',
         name='AI新闻推送',
         replace_existing=True
