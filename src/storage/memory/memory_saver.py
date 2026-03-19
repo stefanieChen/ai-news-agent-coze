@@ -87,10 +87,19 @@ class MemoryManager:
         logger.warning("Using MemorySaver as fallback checkpointer (data will not persist across restarts)")
         return self._checkpointer
 
-    def get_checkpointer(self) -> BaseCheckpointSaver:
-        """获取 checkpointer，优先使用 PostgresSaver，失败时退化为 MemorySaver"""
+    def get_checkpointer(self, force_sync: bool = False) -> BaseCheckpointSaver:
+        """获取 checkpointer，优先使用 PostgresSaver，失败时退化为 MemorySaver
+
+        Args:
+            force_sync: 是否强制使用同步的 MemorySaver（用于非异步环境）
+        """
         if self._checkpointer is not None:
             return self._checkpointer
+
+        # 如果强制使用同步版本，直接返回 MemorySaver
+        if force_sync:
+            logger.info("Forcing synchronous MemorySaver (force_sync=True)")
+            return self._create_fallback_checkpointer()
 
         # 1. 尝试获取 db_url
         db_url = self._get_db_url_safe()
@@ -127,9 +136,13 @@ class MemoryManager:
 _memory_manager: Optional[MemoryManager] = None
 
 
-def get_memory_saver() -> BaseCheckpointSaver:
-    """获取 checkpointer，优先使用 PostgresSaver，db_url 不可用或连接失败时退化为 MemorySaver"""
+def get_memory_saver(force_sync: bool = False) -> BaseCheckpointSaver:
+    """获取 checkpointer，优先使用 PostgresSaver，db_url 不可用或连接失败时退化为 MemorySaver
+
+    Args:
+        force_sync: 是否强制使用同步的 MemorySaver（用于非异步环境，如线程中调用）
+    """
     global _memory_manager
     if _memory_manager is None:
         _memory_manager = MemoryManager()
-    return _memory_manager.get_checkpointer()
+    return _memory_manager.get_checkpointer(force_sync=force_sync)

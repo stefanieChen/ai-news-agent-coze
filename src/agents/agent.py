@@ -27,7 +27,7 @@ def _windowed_messages(old, new):
 class AgentState(MessagesState):
     messages: Annotated[list[AnyMessage], _windowed_messages]
 
-def build_agent(ctx=None):
+def build_agent(ctx=None, force_sync_checkpointer: bool = False):
     workspace_path = os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects")
     config_path = os.path.join(workspace_path, LLM_CONFIG)
 
@@ -83,6 +83,6 @@ def build_agent(ctx=None):
         model=llm,
         system_prompt=cfg.get("sp"),
         tools=[search_ai_news, send_news_email],
-        checkpointer=get_memory_saver(),
+        checkpointer=get_memory_saver(force_sync=force_sync_checkpointer),
         state_schema=AgentState,
     )
