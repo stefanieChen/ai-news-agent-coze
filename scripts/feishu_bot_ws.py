@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 _agent_instance = None
 _agent_ctx = None
 _http_client = None
+_processed_messages = set()  # 已处理的消息ID集合（去重用）
 
 def get_agent():
     """获取Agent实例（单例）"""
@@ -107,6 +108,8 @@ def send_message(open_id, text):
 
 def on_message(event):
     """处理接收到的飞书消息事件（接受 CustomizedEvent 对象）"""
+    global _processed_messages  # 声明使用全局变量
+    
     try:
         # CustomizedEvent 对象结构
         logger.info(f"收到事件: {event}")
@@ -115,6 +118,22 @@ def on_message(event):
         event_data = event.event if hasattr(event, 'event') else {}
         sender = event_data.get("sender", {})
         message = event_data.get("message", {})
+
+        # 获取消息ID用于去重
+        message_id = message.get("message_id", "")
+        
+        # 去重检查：如果消息已处理过，跳过
+        if message_id and message_id in _processed_messages:
+            logger.info(f"消息已处理过，跳过: {message_id}")
+            return
+        
+        # 记录消息ID
+        if message_id:
+            _processed_messages.add(message_id)
+            # 限制缓存大小，避免内存泄漏
+            if len(_processed_messages) > 1000:
+                # 移除最早的一半消息ID
+                _processed_messages = set(list(_processed_messages)[-500:])
 
         # 获取消息内容
         content_str = message.get("content", "{}")
@@ -219,7 +238,8 @@ def main():
         # 但如果不配置加密，encrypt_key 和 verification_token 传空字符串
         handler_builder = EventDispatcherHandler.builder("", "")
 
-        # 注册消息接收事件处理器（v1和v2都需要注册）
+        # 注册消息接收事件处理器
+        # 注意：飞书SDK可能需要同时注册p1和p2才能正确接收消息
         handler_builder.register_p1_customized_event("im.message.receive_v1", on_message)
         handler_builder.register_p2_customized_event("im.message.receive_v1", on_message)
 
